@@ -14,5 +14,5 @@ class Printer(Protocol):
 
 
 class Serializer(Protocol):
-    def serialize(self, book: Book) -> None:
+    def serialize(self, book: Book) -> str:
         ...
