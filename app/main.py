@@ -1,104 +1,31 @@
-import json
-import xml.etree.ElementTree as etree
-from typing import Protocol
-
-
-class Book:
-    def __init__(self, title: str, content: str) -> None:
-        self.title = title
-        self.content = content
-
-
-class Displayer(Protocol):
-    def display(self, book: Book) -> None:
-        ...
-
-
-class Printer(Protocol):
-    def print(self, book: Book) -> None:
-        ...
-
-
-class Serializer(Protocol):
-    def serialize(self, book: Book) -> None:
-        ...
-
-
-class ConsoleDisplayer:
-    def display(self, book: Book) -> None:
-        print(book.content)
-
-
-class ReverseDisplayer:
-    def display(self, book: Book) -> None:
-        print(book.content[::-1])
-
-
-class ConsolePrinter:
-    def print(self, book: Book) -> None:
-        print(f"Printing the book: {book.title}...")
-        print(book.content)
-
-
-class ReversePrinter:
-    def print(self, book: Book) -> None:
-        print(f"Printing the book in reverse: {book.title}...")
-        print(book.content[::-1])
-
-
-class JSONSerializer:
-    def serialize(self, book: Book) -> str:
-        return json.dumps({"title": book.title, "content": book.content})
-
-
-class XMLSerializer:
-    def serialize(self, book: Book) -> str:
-        root = etree.Element("book")
-        title = etree.SubElement(root, "title")
-        title.text = book.title
-        content = etree.SubElement(root, "content")
-        content.text = book.content
-        return etree.tostring(root, encoding="unicode")
-
-
-DISPLAYERS: dict[str, Displayer] = {
-    "console": ConsoleDisplayer(),
-    "reverse": ReverseDisplayer(),
-}
-
-
-PRINTERS: dict[str, Printer] = {
-    "console": ConsolePrinter(),
-    "reverse": ReversePrinter(),
-}
-
-
-SERIALIZERS: dict[str, Serializer] = {
-    "json": JSONSerializer(),
-    "xml": XMLSerializer(),
-}
+from app.displayers import ReverseDisplayer, ConsoleDisplayer
+from app.models import Book
+from app.printers import ReversePrinter, ConsolePrinter
+from app.serializers import JSONSerializer, XMLSerializer
+from app.services import CommandProcessor
 
 
 def main(book: Book, commands: list[tuple[str, str]]) -> None | str:
-    last_result = None
+    displayers = {
+        "console": ConsoleDisplayer(),
+        "reverse": ReverseDisplayer(),
+    }
+    printers = {
+        "console": ConsolePrinter(),
+        "reverse": ReversePrinter(),
+    }
+    serializers = {
+        "json": JSONSerializer(),
+        "xml": XMLSerializer(),
+    }
 
-    for cmd, method_type in commands:
-        if cmd == "display":
-            if method_type not in DISPLAYERS:
-                raise ValueError(f"Unknown display type: {method_type}")
-            DISPLAYERS[method_type].display(book)
-        elif cmd == "print":
-            if method_type not in PRINTERS:
-                raise ValueError(f"Unknown print type: {method_type}")
-            PRINTERS[method_type].print(book)
-        elif cmd == "serialize":
-            if method_type not in SERIALIZERS:
-                raise ValueError(f"Unknown serialize type: {method_type}")
-            last_result = SERIALIZERS[method_type].serialize(book)
-        else:
-            raise ValueError(f"Unknown command: {cmd}")
+    processor = CommandProcessor(
+        displayers=displayers,
+        printers=printers,
+        serializers=serializers
+    )
 
-    return last_result
+    return processor.process(book, commands)
 
 
 if __name__ == "__main__":
