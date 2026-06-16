@@ -1,10 +1,10 @@
 import json
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as etree
 from typing import Protocol
 
 
 class Book:
-    def __init__(self, title: str, content: str):
+    def __init__(self, title: str, content: str) -> None:
         self.title = title
         self.content = content
 
@@ -30,35 +30,35 @@ class ConsoleDisplayer:
 
 
 class ReverseDisplayer:
-    def display(self, book: Book):
+    def display(self, book: Book) -> None:
         print(book.content[::-1])
 
 
 class ConsolePrinter:
-    def print(self, book: Book):
+    def print(self, book: Book) -> None:
         print(f"Printing the book: {book.title}...")
         print(book.content)
 
 
 class ReversePrinter:
-    def print(self, book: Book):
+    def print(self, book: Book) -> None:
         print(f"Printing the book in reverse: {book.title}...")
         print(book.content[::-1])
 
 
 class JSONSerializer:
-    def serialize(self, book: Book):
+    def serialize(self, book: Book) -> str:
         return json.dumps({"title": book.title, "content": book.content})
 
 
 class XMLSerializer:
-    def serialize(self, book: Book):
-        root = ET.Element("book")
-        title = ET.SubElement(root, "title")
+    def serialize(self, book: Book) -> str:
+        root = etree.Element("book")
+        title = etree.SubElement(root, "title")
         title.text = book.title
-        content = ET.SubElement(root, "content")
+        content = etree.SubElement(root, "content")
         content.text = book.content
-        return ET.tostring(root, encoding="unicode")
+        return etree.tostring(root, encoding="unicode")
 
 
 DISPLAYERS: dict[str, Displayer] = {
@@ -71,6 +71,7 @@ PRINTERS: dict[str, Printer] = {
     "console": ConsolePrinter(),
     "reverse": ReversePrinter(),
 }
+
 
 SERIALIZERS: dict[str, Serializer] = {
     "json": JSONSerializer(),
